@@ -2,6 +2,9 @@
 node_modules/
 vendor/
 
+# Large binary files
+*.node
+
 # Build outputs
 dist/
 build/
