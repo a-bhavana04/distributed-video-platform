@@ -1,5 +1,3 @@
-# Distributed Video Platform
-
 ## Table of Contents
 1. [System Architecture](#system-architecture)
 2. [RAFT Consensus Protocol](#raft-consensus-protocol)
@@ -9,6 +7,13 @@
 6. [Mathematical Foundations](#mathematical-foundations)
 7. [Deployment and Testing](#deployment-and-testing)
 
+<p align="center">
+  <img src="images/pic1.jpg" alt="Screenshot 1" width="200">
+  <img src="images/pic2.jpg" alt="Screenshot 2" width="200">
+  <br>
+  <img src="images/pic3.jpg" alt="Screenshot 3" width="200">
+  <img src="images/pic4.jpg" alt="Screenshot 4" width="200">
+</p>
 
 ### Component Roles
 
