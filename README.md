@@ -9,22 +9,6 @@
 6. [Mathematical Foundations](#mathematical-foundations)
 7. [Deployment and Testing](#deployment-and-testing)
 
-## System Architecture
-
-The distributed video platform implements a microservices architecture with the following components:
-
-```
-┌─────────────┐    ┌─────────────┐    ┌─────────────────┐
-│   Frontend  │───▶│  Gateway    │───▶│  RAFT Cluster   │
-│  (Next.js)  │    │ (Load Bal.) │    │ (Consensus)     │
-└─────────────┘    └─────────────┘    └─────────────────┘
-                                       │
-                                       ▼
-┌─────────────┐    ┌─────────────┐    ┌─────────────────┐
-│   Worker    │◀───│  RabbitMQ   │◀───│  MinIO Storage  │
-│ (Thumbnail) │    │ (Message Q) │    │ (Object Store)  │
-└─────────────┘    └─────────────┘    └─────────────────┘
-```
 
 ### Component Roles
 
