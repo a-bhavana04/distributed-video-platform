@@ -1,0 +1,139 @@
+version: "3.8"
+
+services:
+  # Frontend - Next.js Dashboard
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../deploy/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+    depends_on:
+      - gateway
+
+  # API Gateway
+  gateway:
+    build:
+      context: ../gateway
+      dockerfile: ../deploy/Dockerfile.gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - RAFT_NODES=node-1:9000,node-2:9000,node-3:9000
+    depends_on:
+      - node-1
+      - node-2
+      - node-3
+
+  # RAFT Node 1 (Leader)
+  node-1:
+    build:
+      context: ../node
+      dockerfile: ../deploy/Dockerfile.node
+    ports:
+      - "9001:9000"
+    environment:
+      - PORT=9000
+      - NODE_ID=node-1
+      - RAFT_PEERS=node-2:9000,node-3:9000
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=videos
+      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # RAFT Node 2 (Follower)
+  node-2:
+    build:
+      context: ../node
+      dockerfile: ../deploy/Dockerfile.node
+    ports:
+      - "9004:9000"  # Changed from 9002 to 9004 to avoid conflict with MinIO Console
+    environment:
+      - PORT=9000
+      - NODE_ID=node-2
+      - RAFT_PEERS=node-1:9000,node-3:9000
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=videos
+      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # RAFT Node 3 (Follower)
+  node-3:
+    build:
+      context: ../node
+      dockerfile: ../deploy/Dockerfile.node
+    ports:
+      - "9003:9000"
+    environment:
+      - PORT=9000
+      - NODE_ID=node-3
+      - RAFT_PEERS=node-1:9000,node-2:9000
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=videos
+      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # Video Processing Worker
+  worker-processor:
+    build:
+      context: ../worker-thumbnail
+      dockerfile: ../deploy/Dockerfile.worker-thumbnail
+    environment:
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=videos
+      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  minio:
+    image: minio/minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_CONSOLE_ADDRESS: ":9002"
+    command: server /data --address ":9000"
+    ports:
+      - "9000:9000" # MinIO S3 API
+      - "9002:9002" # MinIO Console
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
