@@ -16,7 +16,6 @@ var (
 func InitRabbit(cfg Config) error {
 	var err error
 
-	// Retry logic
 	for i := 0; i < 10; i++ {
 		rabbitConn, err = amqp.Dial(cfg.RabbitURL)
 		if err == nil {
@@ -40,22 +39,22 @@ func InitRabbit(cfg Config) error {
 
 func PublishMessage(queue string, body []byte) error {
 	_, err := rabbitCh.QueueDeclare(
-		queue, // name
-		true,  // durable
-		false, // delete when unused
-		false, // exclusive
-		false, // no-wait
-		nil,   // arguments
+		queue,
+		true,
+		false,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
 		return fmt.Errorf("queue declare failed: %w", err)
 	}
 
 	err = rabbitCh.Publish(
-		"",    // exchange
-		queue, // routing key
-		false, // mandatory
-		false, // immediate
+		"",
+		queue,
+		false,
+		false,
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,

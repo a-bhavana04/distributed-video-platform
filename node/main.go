@@ -25,19 +25,15 @@ func main() {
 		}
 	}()
 
-	// Initialize RAFT consensus
 	InitRaft()
 
 	r := mux.NewRouter()
 	
-	// Video operations
 	r.HandleFunc("/upload", UploadHandler(cfg)).Methods("POST")
 	r.HandleFunc("/videos", VideosListHandler).Methods("GET")
 	
-	// RAFT endpoints
 	r.HandleFunc("/raft/status", RaftStatusHandler).Methods("GET")
 	
-	// Health check
 	r.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
 
 	log.Printf("Node service listening on :%s", cfg.Port)

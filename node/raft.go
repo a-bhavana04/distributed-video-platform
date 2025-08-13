@@ -27,7 +27,6 @@ type RaftNode struct {
 	lastHeartbeat time.Time
 	peers        []string
 	
-	// Video metadata storage (in production, use a real database)
 	videos       map[string]VideoMetadata
 }
 
@@ -62,8 +61,6 @@ func InitRaft() {
 	peersStr := os.Getenv("RAFT_PEERS")
 	peers := []string{}
 	if peersStr != "" {
-		// Parse peers from comma-separated string
-		// peers = strings.Split(peersStr, ",")
 	}
 	
 	raftNode = &RaftNode{
@@ -75,7 +72,6 @@ func InitRaft() {
 		videos:       make(map[string]VideoMetadata),
 	}
 	
-	// Start RAFT consensus protocol
 	go raftNode.Run()
 	
 	log.Printf("RAFT node %s initialized", nodeID)
@@ -112,8 +108,6 @@ func (r *RaftNode) becomeCandidate() {
 }
 
 func (r *RaftNode) startElection() {
-	// Simplified election - in a real implementation, you'd send vote requests
-	// For now, just become leader if no peers or first node
 	if len(r.peers) == 0 || r.id == "node-1" {
 		r.becomeLeader()
 	}
@@ -128,7 +122,6 @@ func (r *RaftNode) becomeLeader() {
 
 func (r *RaftNode) sendHeartbeats() {
 	r.lastHeartbeat = time.Now()
-	// In a real implementation, send heartbeats to followers
 }
 
 func (r *RaftNode) IsLeader() bool {
@@ -158,7 +151,6 @@ func (r *RaftNode) GetStatus() RaftStatus {
 	}
 }
 
-// Video metadata operations (only allowed on leader)
 func (r *RaftNode) StoreVideoMetadata(meta VideoMetadata) error {
 	if !r.IsLeader() {
 		return fmt.Errorf("not the leader")
@@ -195,7 +187,6 @@ func (r *RaftNode) ListVideos() []VideoMetadata {
 	return videos
 }
 
-// HTTP handlers for RAFT endpoints
 func RaftStatusHandler(w http.ResponseWriter, r *http.Request) {
 	status := raftNode.GetStatus()
 	w.Header().Set("Content-Type", "application/json")

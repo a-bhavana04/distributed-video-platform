@@ -39,12 +39,12 @@ func InitRabbit(cfg Config) error {
 
 func ConsumeQueue(queue string, handler func([]byte) error) error {
 	_, err := rabbitCh.QueueDeclare(
-		queue, // name
-		true,  // durable
-		false, // delete when unused
-		false, // exclusive
-		false, // no-wait
-		nil,   // arguments
+		queue,
+		true,
+		false,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
 		return fmt.Errorf("queue declare failed: %w", err)
@@ -52,7 +52,7 @@ func ConsumeQueue(queue string, handler func([]byte) error) error {
 
 	deliveries, err := rabbitCh.Consume(
 		queue,
-		"worker-thumbnail", // consumer tag
+		"worker-thumbnail",
 		false,
 		false,
 		false,

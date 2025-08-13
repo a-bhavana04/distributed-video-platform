@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-// message payload published by node: {"bucket":"videos","object":"sample.mp4"}
 type VideoUploaded struct {
 	Bucket string `json:"bucket"`
 	Object string `json:"object"`
@@ -35,7 +34,6 @@ func loadConfig() Config {
 func main() {
 	cfg := loadConfig()
 
-	// Init MinIO (ensures bucket exists)
 	if err := InitMinIO(cfg); err != nil {
 		log.Fatalf("init MinIO: %v", err)
 	}
@@ -44,11 +42,9 @@ func main() {
 	}
 	log.Println("worker-thumbnail: connected to RabbitMQ & MinIO")
 
-	// graceful shutdown
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	// Start consuming
 	err := ConsumeQueue("video_uploaded", func(body []byte) error {
 		var msg VideoUploaded
 		if err := json.Unmarshal(body, &msg); err != nil {

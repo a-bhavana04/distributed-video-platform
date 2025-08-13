@@ -10,12 +10,10 @@ import (
 func main() {
 	cfg := LoadConfig()
 	
-	// Setup routes
 	router := SetupRoutes(cfg)
 	
-	// Setup CORS for frontend
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"}, // Next.js default port
+		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,

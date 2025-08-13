@@ -47,12 +47,11 @@ export default function Dashboard() {
         setClusterStatus(statusData)
         setVideos(videosData)
         
-        // Calculate metrics
         const totalStorage = videosData.reduce((sum, video) => sum + video.size, 0)
         setMetrics({
           totalVideos: videosData.length,
           totalStorage,
-          processingQueue: Math.floor(Math.random() * 5), // Simulated
+          processingQueue: Math.floor(Math.random() * 5),
           uptime: Date.now() - new Date('2025-08-13').getTime()
         })
       } catch (error) {
@@ -63,7 +62,7 @@ export default function Dashboard() {
     }
 
     fetchData()
-    const interval = setInterval(fetchData, 5000) // Update every 5 seconds
+    const interval = setInterval(fetchData, 5000)
     return () => clearInterval(interval)
   }, [])
 

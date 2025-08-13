@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-  # Frontend - Next.js Dashboard
   frontend:
     build:
       context: ../frontend
@@ -13,7 +12,6 @@ services:
     depends_on:
       - gateway
 
-  # API Gateway
   gateway:
     build:
       context: ../gateway
@@ -28,7 +26,6 @@ services:
       - node-2
       - node-3
 
-  # RAFT Node 1 (Leader)
   node-1:
     build:
       context: ../node
@@ -50,13 +47,12 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  # RAFT Node 2 (Follower)
   node-2:
     build:
       context: ../node
       dockerfile: ../deploy/Dockerfile.node
     ports:
-      - "9004:9000"  # Changed from 9002 to 9004 to avoid conflict with MinIO Console
+      - "9004:9000"
     environment:
       - PORT=9000
       - NODE_ID=node-2
@@ -72,7 +68,6 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  # RAFT Node 3 (Follower)
   node-3:
     build:
       context: ../node
@@ -94,7 +89,6 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  # Video Processing Worker
   worker-processor:
     build:
       context: ../worker-thumbnail
@@ -119,8 +113,8 @@ services:
       MINIO_CONSOLE_ADDRESS: ":9002"
     command: server /data --address ":9000"
     ports:
-      - "9000:9000" # MinIO S3 API
-      - "9002:9002" # MinIO Console
+      - "9000:9000"
+      - "9002:9002"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 5s
@@ -130,8 +124,8 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     ports:
-      - "5672:5672"   # AMQP
-      - "15672:15672" # Management UI
+      - "5672:5672"
+      - "15672:15672"
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 5s

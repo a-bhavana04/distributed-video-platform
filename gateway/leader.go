@@ -12,7 +12,7 @@ import (
 
 type Config struct {
 	Port      string
-	NodeURLs  []string // List of all RAFT nodes
+	NodeURLs  []string
 }
 
 type NodeStatus struct {
@@ -47,14 +47,13 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
-// DiscoverLeader queries all nodes to find the current RAFT leader
 func (cfg Config) DiscoverLeader() (*NodeStatus, error) {
 	client := &http.Client{Timeout: 5 * time.Second}
 	
 	for _, nodeURL := range cfg.NodeURLs {
 		resp, err := client.Get(nodeURL + "/raft/status")
 		if err != nil {
-			continue // Try next node
+			continue
 		}
 		defer resp.Body.Close()
 		
@@ -76,7 +75,6 @@ func (cfg Config) DiscoverLeader() (*NodeStatus, error) {
 	return nil, fmt.Errorf("no leader found among nodes: %v", cfg.NodeURLs)
 }
 
-// GetClusterStatus returns the status of all nodes in the cluster
 func (cfg Config) GetClusterStatus() ClusterStatus {
 	client := &http.Client{Timeout: 3 * time.Second}
 	var leader *NodeStatus
@@ -85,7 +83,6 @@ func (cfg Config) GetClusterStatus() ClusterStatus {
 	for _, nodeURL := range cfg.NodeURLs {
 		resp, err := client.Get(nodeURL + "/raft/status")
 		if err != nil {
-			// Node is down
 			followers = append(followers, NodeStatus{
 				URL:    nodeURL,
 				Status: "down",
@@ -120,7 +117,6 @@ func (cfg Config) GetClusterStatus() ClusterStatus {
 	}
 }
 
-// ProxyToLeader forwards requests to the current RAFT leader
 func (cfg Config) ProxyToLeader(w http.ResponseWriter, r *http.Request) {
 	leader, err := cfg.DiscoverLeader()
 	if err != nil {
@@ -128,7 +124,6 @@ func (cfg Config) ProxyToLeader(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Create proxy request
 	targetURL := leader.URL + r.URL.Path
 	if r.URL.RawQuery != "" {
 		targetURL += "?" + r.URL.RawQuery
@@ -140,14 +135,12 @@ func (cfg Config) ProxyToLeader(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Copy headers
 	for key, values := range r.Header {
 		for _, value := range values {
 			proxyReq.Header.Add(key, value)
 		}
 	}
 	
-	// Execute request
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(proxyReq)
 	if err != nil {
@@ -156,14 +149,12 @@ func (cfg Config) ProxyToLeader(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 	
-	// Copy response headers
 	for key, values := range resp.Header {
 		for _, value := range values {
 			w.Header().Add(key, value)
 		}
 	}
 	
-	// Copy status code and body
 	w.WriteHeader(resp.StatusCode)
 	io.Copy(w, resp.Body)
 }

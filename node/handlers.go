@@ -11,7 +11,6 @@ import (
 
 func UploadHandler(cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Check if this node is the leader
 		if !raftNode.IsLeader() {
 			http.Error(w, "Not the leader - please route through gateway", http.StatusServiceUnavailable)
 			return
@@ -23,7 +22,6 @@ func UploadHandler(cfg Config) http.HandlerFunc {
 			return
 		}
 		
-		// Generate video ID and create metadata
 		videoID := generateVideoID(meta.Object)
 		videoMeta := VideoMetadata{
 			ID:          videoID,
@@ -34,16 +32,14 @@ func UploadHandler(cfg Config) http.HandlerFunc {
 			Size:        meta.Size,
 			ContentType: meta.ContentType,
 			UploadedAt:  time.Now(),
-			Resolutions: []string{"original"}, // Will be updated by processor
+			Resolutions: []string{"original"},
 		}
 		
-		// Store metadata in RAFT cluster
 		if err := raftNode.StoreVideoMetadata(videoMeta); err != nil {
 			http.Error(w, "Failed to store metadata: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		
-		// Publish to message queue for processing
 		body, err := json.Marshal(meta)
 		if err != nil {
 			http.Error(w, "Failed to encode message: "+err.Error(), http.StatusInternalServerError)
@@ -61,18 +57,15 @@ func UploadHandler(cfg Config) http.HandlerFunc {
 }
 
 func generateVideoID(objectName string) string {
-	// Extract base name and use timestamp
 	base := filepath.Base(objectName)
 	base = strings.TrimSuffix(base, filepath.Ext(base))
 	return fmt.Sprintf("%d_%s", time.Now().Unix(), base)
 }
 
 func extractTitle(objectName string) string {
-	// Extract a clean title from the object name
 	base := filepath.Base(objectName)
 	title := strings.TrimSuffix(base, filepath.Ext(base))
 	
-	// Remove timestamp prefix if present
 	parts := strings.SplitN(title, "_", 2)
 	if len(parts) == 2 {
 		return parts[1]

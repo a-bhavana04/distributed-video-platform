@@ -1,6 +1,5 @@
 import axios from 'axios'
 
-// Configure axios to use the API Gateway
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
   timeout: 10000,
@@ -46,13 +45,11 @@ export interface UploadResponse {
   resolutions: string[]
 }
 
-// Cluster management
 export const getClusterStatus = async (): Promise<ClusterStatus> => {
   const response = await api.get('/cluster/status')
   return response.data
 }
 
-// Video operations
 export const getVideos = async (): Promise<Video[]> => {
   const response = await api.get('/videos')
   return response.data
@@ -82,7 +79,6 @@ export const uploadVideo = async (file: File, onProgress?: (progress: number) =>
   return response.data
 }
 
-// Video streaming URLs
 export const getVideoStreamUrl = (id: string): string => {
   return `${api.defaults.baseURL}/videos/${id}/stream`
 }
